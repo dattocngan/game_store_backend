@@ -1,3 +1,4 @@
+const { default: mongoose } = require("mongoose");
 const Game = require("../models/game");
 
 // //Get all games
@@ -144,7 +145,7 @@ exports.editGame = async (req, res, next) => {
 	}
 };
 
-// //Delete game
+// Delete game
 exports.deleteGame = async (req, res, next) => {
 	try {
 		const id = req.params.id;
@@ -171,19 +172,107 @@ exports.deleteGame = async (req, res, next) => {
 	}
 };
 
-exports.addGameToCart = async (req, res, next) => {
+//Add or remove game to user's cart
+exports.addOrRemoveGameOfCart = async (req, res, next) => {
 	try {
 		const id = req.params.id;
 
 		const user = req.user;
 
-		if (!user.cart.includes(id)) {
+		const index = user.cart.indexOf(id);
+
+		if (index > -1) {
+			user.cart.splice(index, 1);
+		} else {
 			user.cart.push(id);
-			await user.save();
 		}
 
+		await user.save();
+
 		res.status(200).json({
-			message: "Add to cart successfully!",
+			message: "Edit cart successfully!",
+		});
+	} catch (err) {
+		if (!err.statusCode) {
+			err.statusCode = 500;
+		}
+		next(err);
+	}
+};
+
+//Add or remove game to user's wishlist
+exports.addOrRemoveGameOfWishList = async (req, res, next) => {
+	try {
+		const id = req.params.id;
+
+		const user = req.user;
+
+		const index = user.wishlist.indexOf(id);
+
+		if (index > -1) {
+			user.wishlist.splice(index, 1);
+		} else {
+			user.wishlist.push(id);
+		}
+
+		await user.save();
+
+		res.status(200).json({
+			message: "Edit wishlist successfully!",
+		});
+	} catch (err) {
+		if (!err.statusCode) {
+			err.statusCode = 500;
+		}
+		next(err);
+	}
+};
+
+//Purchase game
+exports.purchaseGame = async (req, res, next) => {
+	try {
+		const user = req.user;
+
+		const { cart } = req.body;
+
+		if (!cart || cart.length === 0) {
+			const error = new Error("No games in the cart!");
+			error.statusCode = 404;
+			throw error;
+		}
+
+		const games = await Game.find({ _id: { $in: cart } });
+
+		if (!games.length) {
+			const error = new Error("Invalid game!");
+			error.statusCode = 403;
+			throw error;
+		}
+
+		let totalPrice = 0;
+
+		games.forEach((game) => {
+			totalPrice += (game.price * (100 - game.discount)) / 100;
+		});
+
+		if (totalPrice > user.budget) {
+			const error = new Error("Not enough money!");
+			error.statusCode = 403;
+			throw error;
+		}
+
+		games.forEach((game) => {
+			game.downloaded_number++;
+			game.save();
+		});
+
+		user.budget -= totalPrice;
+		user.cart = [];
+
+		await user.save();
+
+		res.status(200).json({
+			message: "Edit wishlist successfully!",
 		});
 	} catch (err) {
 		if (!err.statusCode) {

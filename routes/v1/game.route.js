@@ -76,7 +76,13 @@ router.put(
 // Delete game
 router.delete("/:id", isAdmin, gameController.deleteGame);
 
-//Add game to cart
-router.post("/:id/add-to-cart", isAuth, gameController.addGameToCart);
+//Add or remove game to cart
+router.post("/:id/cart", isAuth, gameController.addOrRemoveGameOfCart);
+
+//Add or remove game to wishlist
+router.post("/:id/wishlist", isAuth, gameController.addOrRemoveGameOfWishList);
+
+//Purchase game
+router.post("/purchase", isAuth, gameController.purchaseGame);
 
 module.exports = router;

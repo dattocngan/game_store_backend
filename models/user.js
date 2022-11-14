@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const FKHelper = require("../helpers/mongo/foreign-key-helper");
 
 const Schema = mongoose.Schema;
 
@@ -36,6 +37,32 @@ const userSchema = new Schema(
 			type: Number,
 			default: 0,
 		},
+		cart: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "Game",
+				validate: {
+					isAsync: true,
+					validator: function (v) {
+						return FKHelper(mongoose.model("Game"), v);
+					},
+					message: `Game doesn't exist`,
+				},
+			},
+		],
+		wishlist: [
+			{
+				type: Schema.Types.ObjectId,
+				ref: "Game",
+				validate: {
+					isAsync: true,
+					validator: function (v) {
+						return FKHelper(mongoose.model("Game"), v);
+					},
+					message: `Game doesn't exist`,
+				},
+			},
+		],
 	},
 	{
 		timestamps: true,

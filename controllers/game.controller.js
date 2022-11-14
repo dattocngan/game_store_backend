@@ -52,9 +52,14 @@ exports.createGame = async (req, res, next) => {
 			release_date,
 			description,
 			discount,
-			feature_image,
-			images,
 		} = req.body;
+
+		const feature_image = res.locals.feature_image.filename;
+
+		const images = [];
+		res.locals.images.forEach((image) => {
+			images.push(image.filename);
+		});
 
 		await Game.create({
 			name,
@@ -103,8 +108,6 @@ exports.editGame = async (req, res, next) => {
 			release_date,
 			description,
 			discount,
-			feature_image,
-			images,
 			recommend,
 		} = req.body;
 
@@ -116,12 +119,15 @@ exports.editGame = async (req, res, next) => {
 		game.release_date = release_date || game.release_date;
 		game.description = description || game.description;
 		game.discount = discount || game.discount;
-		game.feature_image = feature_image || game.feature_image;
 		game.recommend = recommend || game.recommend;
 
-		if (images && images.length > 0) {
-			images.forEach((image) => {
-				game.images.push(image);
+		if (res.locals.feature_image) {
+			game.feature_image = res.locals.feature_image.filename;
+		}
+
+		if (res.locals.images && res.locals.images.length > 0) {
+			res.locals.images.forEach((image) => {
+				game.images.push(image.filename);
 			});
 		}
 
@@ -156,6 +162,28 @@ exports.deleteGame = async (req, res, next) => {
 
 		res.status(200).json({
 			message: "Deleted successfully!",
+		});
+	} catch (err) {
+		if (!err.statusCode) {
+			err.statusCode = 500;
+		}
+		next(err);
+	}
+};
+
+exports.addGameToCart = async (req, res, next) => {
+	try {
+		const id = req.params.id;
+
+		const user = req.user;
+
+		if (!user.cart.includes(id)) {
+			user.cart.push(id);
+			await user.save();
+		}
+
+		res.status(200).json({
+			message: "Add to cart successfully!",
 		});
 	} catch (err) {
 		if (!err.statusCode) {

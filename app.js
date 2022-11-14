@@ -1,4 +1,5 @@
 require("dotenv/config");
+const path = require("path");
 
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -10,6 +11,7 @@ const app = express();
 
 app.use(helmet());
 app.use(bodyParser.json()); // application/json
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 //CORS
 app.use(cors());

@@ -1,23 +1,82 @@
 const express = require("express");
 
 const router = express.Router();
+const multer = require("multer");
 
 const gameController = require("../../controllers/game.controller");
 const isAdmin = require("../../middlewares/is-admin");
+const isAuth = require("../../middlewares/is-auth");
 
-// Get all objectives
+const {
+	configFilterFileUpload,
+	configStorage,
+} = require("../../helpers/upload");
+
+const upload = multer({
+	storage: configStorage(),
+	fileFilter: configFilterFileUpload(),
+});
+
+// Get all games
 router.get("/", gameController.getGames);
 
-// //Get objective by id
+// Get game by id
 router.get("/:id", gameController.getGame);
 
-// //Create new objective
-router.post("/", isAdmin, gameController.createGame);
+// Create new game
+router.post(
+	"/",
+	isAdmin,
+	upload.fields([
+		{
+			name: "feature_image",
+			maxCount: 1,
+		},
+		{
+			name: "images",
+		},
+	]),
+	async (req, res, next) => {
+		res.locals.feature_image = req.files.feature_image[0];
+		res.locals.images = req.files.images;
+		next();
+	},
+	gameController.createGame
+);
 
-// //Edit objective
-router.put("/:id", isAdmin, gameController.editGame);
+// Edit game
+router.put(
+	"/:id",
+	isAdmin,
+	upload.fields([
+		{
+			name: "feature_image",
+			maxCount: 1,
+		},
+		{
+			name: "images",
+		},
+	]),
+	async (req, res, next) => {
+		if (Object.keys(req.files).length > 0) {
+			if (req.files.feature_image) {
+				res.locals.feature_image = req.files.feature_image[0];
+			}
 
-// //Delete objective
+			if (req.files.images && req.files.images.length > 0) {
+				res.locals.images = req.files.images;
+			}
+		}
+
+		next();
+	},
+	gameController.editGame
+);
+
+// Delete game
 router.delete("/:id", isAdmin, gameController.deleteGame);
+
+//Add game to cart
+router.post("/:id/add-to-cart", isAuth, gameController.addGameToCart);
 
 module.exports = router;

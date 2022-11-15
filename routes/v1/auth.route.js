@@ -4,6 +4,7 @@ const router = express.Router();
 
 const isAuth = require("../../middlewares/is-auth");
 const authController = require("../../controllers/auth.controller");
+const isAdmin = require("../../middlewares/is-admin");
 
 //Login
 router.post("/login", authController.login);
@@ -16,5 +17,11 @@ router.get("/user", isAuth, authController.getUser);
 
 //Edit profile or password
 router.put("/user", isAuth, authController.editUser);
+
+//Activate code
+router.post("/activate-code", isAuth, authController.activateCode);
+
+//Generate code
+router.post("/code", isAdmin, authController.generateCode);
 
 module.exports = router;

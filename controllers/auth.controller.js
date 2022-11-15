@@ -1,8 +1,10 @@
 require("dotenv/config");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const codeGenerator = require("otp-generator");
 
 const User = require("../models/user");
+const Code = require("../models/code");
 
 //Create new user
 exports.signup = async (req, res, next) => {
@@ -146,6 +148,76 @@ exports.editUser = async (req, res, next) => {
 
 		res.status(200).json({
 			message: "Updated successfully!",
+		});
+	} catch (err) {
+		if (!err.statusCode) {
+			err.statusCode = 500;
+		}
+		next(err);
+	}
+};
+
+//Generate code
+exports.generateCode = async (req, res, next) => {
+	try {
+		const codes = [];
+		let expiredTime = new Date();
+		expiredTime.setDate(expiredTime.getDate() + 1);
+
+		for (let i = 0; i < 20; i++) {
+			const code = codeGenerator.generate(6, {
+				digits: true,
+				lowerCaseAlphabets: false,
+				upperCaseAlphabets: false,
+				specialChars: false,
+			});
+
+			codes.push({
+				code: code,
+				expired_time: expiredTime,
+			});
+		}
+
+		await Code.insertMany(codes);
+
+		res.status(201).json({
+			message: "Generated codes successfully!",
+		});
+	} catch (err) {
+		if (!err.statusCode) {
+			err.statusCode = 500;
+		}
+		next(err);
+	}
+};
+
+//Activate code
+exports.activateCode = async (req, res, next) => {
+	try {
+		const { code } = req.body;
+
+		const codeDb = await Code.findOne({ code: code });
+
+		if (!codeDb) {
+			const error = new Error(`Code isn't existed!`);
+			error.statusCode = 404;
+			throw error;
+		}
+
+		if (codeDb.is_activated) {
+			const error = new Error(`Code was used!`);
+			error.statusCode = 403;
+			throw error;
+		}
+
+		if (codeDb.expired_time < new Date()) {
+			const error = new Error(`Code was used!`);
+			error.statusCode = 403;
+			throw error;
+		}
+
+		res.status(201).json({
+			message: "Generate codes successfully!",
 		});
 	} catch (err) {
 		if (!err.statusCode) {

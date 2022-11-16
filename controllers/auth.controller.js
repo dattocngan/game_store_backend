@@ -95,9 +95,17 @@ exports.login = async (req, res, next) => {
 //Get user
 exports.getUser = async (req, res, next) => {
   try {
-    const { password, _id, createdAt, updatedAt, __v, ...user } = JSON.parse(
-      JSON.stringify(req.user),
-    );
+    const {
+      password,
+      _id,
+      createdAt,
+      updatedAt,
+      __v,
+      role,
+      cart,
+      wishlist,
+      ...user
+    } = JSON.parse(JSON.stringify(req.user));
     res.status(200).json({
       user: user,
     });
@@ -112,11 +120,12 @@ exports.getUser = async (req, res, next) => {
 //Edit user
 exports.editUser = async (req, res, next) => {
   try {
-    const { name, birthday, sex, oldPassword, newPassword } = req.body;
+    const { name, birthday, sex, address, oldPassword, newPassword } = req.body;
     const user = req.user;
 
     user.name = name || user.name;
     user.birthday = birthday || user.birthday;
+    user.address = address || user.address;
     user.sex = sex !== undefined ? sex : user.sex;
 
     if (oldPassword && newPassword) {

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const game = require("../models/game");
 const Game = require("../models/game");
 
 // //Get all games
@@ -285,6 +286,17 @@ exports.purchaseGame = async (req, res, next) => {
       throw error;
     }
 
+    games.forEach((game) => {
+      for (let i = 0; i < user.games_bought.length; i++) {
+        const gameId = user.games_bought[i].game;
+        if (gameId.toString() === game._id.toString()) {
+          const error = new Error("Cannot buy bought game!");
+          error.statusCode = 403;
+          throw error;
+        }
+      }
+    });
+
     let totalPrice = 0;
 
     games.forEach((game) => {
@@ -305,10 +317,50 @@ exports.purchaseGame = async (req, res, next) => {
     user.budget -= totalPrice;
     user.cart = [];
 
+    games.forEach((game) => {
+      user.games_bought.push({
+        game: game,
+        date_bought: new Date(),
+      });
+    });
+
+    user.wishlist = user.wishlist.filter((value) => {
+      let check = true;
+      for (let i = 0; i < games.length; i++) {
+        if (games[i]._id.toString() === value.toString()) {
+          check = false;
+          break;
+        }
+      }
+      return check;
+    });
+
     await user.save();
 
     res.status(200).json({
-      message: "Edit wishlist successfully!",
+      message: "Purchase games successfully!",
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+//Get all games bought
+exports.getGamesBought = async (req, res, next) => {
+  try {
+    const user = req.user;
+
+    const games = user.games_bought;
+
+    for (let i = 0; i < games.length; i++) {
+      const game = await Game.findById(games[i].game);
+      games[i].game = game;
+    }
+    res.status(200).json({
+      games,
     });
   } catch (err) {
     if (!err.statusCode) {

@@ -104,6 +104,7 @@ exports.getUser = async (req, res, next) => {
       role,
       cart,
       wishlist,
+      games_bought,
       ...user
     } = JSON.parse(JSON.stringify(req.user));
     res.status(200).json({
@@ -229,14 +230,28 @@ exports.activateCode = async (req, res, next) => {
     codeDb.is_activated = 1;
 
     const user = req.user;
-
-    console.log(typeof user.budget);
     user.budget += codeDb.value;
 
     await Promise.all([user.save(), codeDb.save()]);
 
     res.status(200).json({
       message: "Active code successfully!",
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+//Get all users
+exports.getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({}, "-password -__v");
+
+    res.status(200).json({
+      users,
     });
   } catch (err) {
     if (!err.statusCode) {

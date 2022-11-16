@@ -18,6 +18,9 @@ router.get("/user", isAuth, authController.getUser);
 //Edit profile or password
 router.put("/user", isAuth, authController.editUser);
 
+//Get all users
+router.get("/users", isAdmin, authController.getAllUsers);
+
 //Activate code
 router.post("/activate-code", isAuth, authController.activateCode);
 

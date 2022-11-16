@@ -20,11 +20,17 @@ const upload = multer({
 // Get all games
 router.get("/", gameController.getGames);
 
+//Get all games bought
+router.get("/bought", isAuth, gameController.getGamesBought);
+
 //Get all games in cart
 router.get("/cart", isAuth, gameController.getGamesInCart);
 
 //Get all games in wishlist
 router.get("/wishlist", isAuth, gameController.getGamesInWishList);
+
+//Purchase game
+router.post("/purchase", isAuth, gameController.purchaseGame);
 
 // Get game by id
 router.get("/:id", gameController.getGame);
@@ -87,8 +93,5 @@ router.post("/:id/cart", isAuth, gameController.addOrRemoveGameOfCart);
 
 //Add or remove game to wishlist
 router.post("/:id/wishlist", isAuth, gameController.addOrRemoveGameOfWishList);
-
-//Purchase game
-router.post("/purchase", isAuth, gameController.purchaseGame);
 
 module.exports = router;

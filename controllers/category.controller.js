@@ -46,7 +46,8 @@ exports.getCategory = async (req, res, next) => {
 //Create category
 exports.createCategory = async (req, res, next) => {
   try {
-    const { name, image } = req.body;
+    const { name } = req.body;
+    const image = res.local.image;
 
     await Category.create({
       name,
@@ -78,7 +79,9 @@ exports.editCategory = async (req, res, next) => {
       throw error;
     }
 
-    const { name, image } = req.body;
+    const { name } = req.body;
+
+    const image = res.locals.image;
 
     category.name = name || category.name;
     category.image = image || category.image;

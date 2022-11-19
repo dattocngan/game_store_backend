@@ -19,7 +19,7 @@ router.get("/profile", isAuth, authController.getProfile);
 router.put("/profile", isAuth, authController.editProfile);
 
 //Get a user
-router.get("/user/:id", isAdmin, authController.getUser);
+router.get("/users/:id", isAdmin, authController.getUser);
 
 //Get all users
 router.get("/users", isAdmin, authController.getAllUsers);

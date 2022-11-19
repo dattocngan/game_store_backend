@@ -5,6 +5,7 @@ const codeGenerator = require("otp-generator");
 
 const User = require("../models/user");
 const Code = require("../models/code");
+const Game = require("../models/game");
 
 //Create new user
 exports.signup = async (req, res, next) => {
@@ -268,6 +269,13 @@ exports.getUser = async (req, res, next) => {
   try {
     const id = req.params.id;
     const user = await User.findOne({ _id: id }, "-password -__v");
+
+    const games = user.games_bought;
+
+    for (let i = 0; i < games.length; i++) {
+      const game = await Game.findById(games[i].game);
+      games[i].game = game;
+    }
 
     res.status(200).json({
       user,

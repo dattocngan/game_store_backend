@@ -6,6 +6,7 @@ const multer = require("multer");
 const gameController = require("../../controllers/game.controller");
 const isAdmin = require("../../middlewares/is-admin");
 const isAuth = require("../../middlewares/is-auth");
+const { s3Upload } = require("../../helpers/s3");
 
 const {
   configFilterFileUpload,
@@ -13,7 +14,7 @@ const {
 } = require("../../helpers/upload");
 
 const upload = multer({
-  storage: configStorage(),
+  storage: multer.memoryStorage(),
   fileFilter: configFilterFileUpload(),
 });
 
@@ -49,8 +50,10 @@ router.post(
     },
   ]),
   async (req, res, next) => {
-    res.locals.feature_image = req.files.feature_image[0];
-    res.locals.images = req.files.images;
+    const featureResult = await s3Upload(req.files.feature_image);
+    res.locals.feature_image = featureResult[0].key;
+    const imagesResult = await s3Upload(req.files.images);
+    res.locals.images = imagesResult;
     next();
   },
   gameController.createGame,
@@ -72,11 +75,13 @@ router.put(
   async (req, res, next) => {
     if (Object.keys(req.files).length > 0) {
       if (req.files.feature_image) {
-        res.locals.feature_image = req.files.feature_image[0];
+        const featureResult = await s3Upload(req.files.feature_image);
+        res.locals.feature_image = featureResult[0].key;
       }
 
       if (req.files.images && req.files.images.length > 0) {
-        res.locals.images = req.files.images;
+        const imagesResult = await s3Upload(req.files.images);
+        res.locals.images = imagesResult;
       }
     }
 

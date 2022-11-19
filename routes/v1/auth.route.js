@@ -13,10 +13,13 @@ router.post("/login", authController.login);
 router.post("/signup", authController.signup);
 
 //Get profile
-router.get("/user", isAuth, authController.getUser);
+router.get("/profile", isAuth, authController.getProfile);
 
 //Edit profile or password
-router.put("/user", isAuth, authController.editUser);
+router.put("/profile", isAuth, authController.editProfile);
+
+//Get a user
+router.get("/user/:id", isAdmin, authController.getUser);
 
 //Get all users
 router.get("/users", isAdmin, authController.getAllUsers);

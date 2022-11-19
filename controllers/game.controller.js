@@ -18,7 +18,7 @@ exports.getGames = async (req, res, next) => {
   }
 };
 
-// //Get an game by id
+//Get game by id
 exports.getGame = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -56,11 +56,11 @@ exports.createGame = async (req, res, next) => {
       discount,
     } = req.body;
 
-    const feature_image = res.locals.feature_image.filename;
+    const feature_image = res.locals.feature_image;
 
     const images = [];
     res.locals.images.forEach((image) => {
-      images.push(image.filename);
+      images.push(image.key);
     });
 
     await Game.create({
@@ -124,12 +124,12 @@ exports.editGame = async (req, res, next) => {
     game.recommend = recommend || game.recommend;
 
     if (res.locals.feature_image) {
-      game.feature_image = res.locals.feature_image.filename;
+      game.feature_image = res.locals.feature_image;
     }
 
     if (res.locals.images && res.locals.images.length > 0) {
       res.locals.images.forEach((image) => {
-        game.images.push(image.filename);
+        game.images.push(image.key);
       });
     }
 

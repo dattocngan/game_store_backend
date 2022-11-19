@@ -92,8 +92,8 @@ exports.login = async (req, res, next) => {
   }
 };
 
-//Get user
-exports.getUser = async (req, res, next) => {
+//Get profile
+exports.getProfile = async (req, res, next) => {
   try {
     const {
       password,
@@ -118,16 +118,18 @@ exports.getUser = async (req, res, next) => {
   }
 };
 
-//Edit user
-exports.editUser = async (req, res, next) => {
+//Edit profile
+exports.editProfile = async (req, res, next) => {
   try {
-    const { name, birthday, sex, address, oldPassword, newPassword } = req.body;
+    const { name, birthday, sex, address, email, oldPassword, newPassword } =
+      req.body;
     const user = req.user;
 
     user.name = name || user.name;
     user.birthday = birthday || user.birthday;
     user.address = address || user.address;
     user.sex = sex !== undefined ? sex : user.sex;
+    user.email = email || user.email;
 
     if (oldPassword && newPassword) {
       if (oldPassword.length < 8 || newPassword.length < 8) {
@@ -252,6 +254,23 @@ exports.getAllUsers = async (req, res, next) => {
 
     res.status(200).json({
       users,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+//Get user by id
+exports.getUser = async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const user = await User.findOne({ _id: id }, "-password -__v");
+
+    res.status(200).json({
+      user,
     });
   } catch (err) {
     if (!err.statusCode) {

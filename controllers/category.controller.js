@@ -46,7 +46,8 @@ exports.getCategory = async (req, res, next) => {
 //Create category
 exports.createCategory = async (req, res, next) => {
   try {
-    const { name, image } = req.body;
+    const { name } = req.body;
+    const image = res.locals.image;
 
     await Category.create({
       name,
@@ -78,10 +79,13 @@ exports.editCategory = async (req, res, next) => {
       throw error;
     }
 
-    const { name, image } = req.body;
+    const { name } = req.body;
 
     category.name = name || category.name;
-    category.image = image || category.image;
+    
+    if (res.locals.image) {
+      category.image = res.locals.image;
+    }
 
     await category.save();
 

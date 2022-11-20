@@ -1,5 +1,4 @@
-const mongoose = require("mongoose");
-const game = require("../models/game");
+const User = require("../models/user");
 const Game = require("../models/game");
 
 // //Get all games
@@ -161,6 +160,27 @@ exports.deleteGame = async (req, res, next) => {
     }
 
     await Game.findByIdAndDelete(id);
+
+    const users = await User.find();
+
+    users.forEach((user) => {
+      let index;
+      index = user.cart.indexOf(id);
+      if (index > -1) {
+        user.cart.splice(index, 1);
+      }
+      index = user.wishlist.indexOf(id);
+      if (index > -1) {
+        user.wishlist.splice(index, 1);
+      }
+      for (let i = 0; i < user.games_bought.length; i++) {
+        if (user.games_bought[i].game.toString() === id.toString()) {
+          user.games_bought.splice(i, 1);
+          break;
+        }
+      }
+      user.save();
+    });
 
     res.status(200).json({
       message: "Deleted successfully!",

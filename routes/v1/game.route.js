@@ -8,10 +8,7 @@ const isAdmin = require("../../middlewares/is-admin");
 const isAuth = require("../../middlewares/is-auth");
 const { s3Upload } = require("../../helpers/s3");
 
-const {
-  configFilterFileUpload,
-  configStorage,
-} = require("../../helpers/upload");
+const { configFilterFileUpload } = require("../../helpers/upload");
 
 const upload = multer({
   storage: multer.memoryStorage(),

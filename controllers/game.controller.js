@@ -320,7 +320,9 @@ exports.purchaseGame = async (req, res, next) => {
     let totalPrice = 0;
 
     games.forEach((game) => {
-      totalPrice += (game.price * (100 - game.discount)) / 100;
+      totalPrice += (
+        Math.round(game.price * (100 - game.discount)) / 100
+      ).toFixed(2);
     });
 
     if (totalPrice > user.budget) {

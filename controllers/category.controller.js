@@ -1,3 +1,5 @@
+require("dotenv/config");
+
 const Category = require("../models/category");
 const Game = require("../models/game");
 
@@ -5,6 +7,9 @@ const Game = require("../models/game");
 exports.getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find();
+    categories.forEach((category) => {
+      category.image = process.env.DOMAIN_IMAGE + category.image;
+    });
 
     res.status(200).json({
       categories: categories,
@@ -23,15 +28,16 @@ exports.getCategory = async (req, res, next) => {
     const id = req.params.id;
     const category = await Category.findOne({
       _id: id,
-    }).populate("games", "name -category");
-
-    console.log(category);
+    }).populate("games", "name feature_image -category");
 
     if (!category) {
       const error = new Error("Cannot find the category!");
       error.statusCode = 404;
       throw error;
     }
+
+    category.image = process.env.DOMAIN_IMAGE + category.image;
+
     res.status(200).json({
       category,
     });
@@ -82,7 +88,7 @@ exports.editCategory = async (req, res, next) => {
     const { name } = req.body;
 
     category.name = name || category.name;
-    
+
     if (res.locals.image) {
       category.image = res.locals.image;
     }

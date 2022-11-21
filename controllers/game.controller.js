@@ -1,3 +1,5 @@
+require("dotenv/config");
+
 const User = require("../models/user");
 const Game = require("../models/game");
 
@@ -5,6 +7,95 @@ const Game = require("../models/game");
 exports.getGames = async (req, res, next) => {
   try {
     const games = await Game.find().populate("category", "name");
+
+    games.forEach((game) => {
+      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+      game.images = game.images.map(
+        (image) => process.env.DOMAIN_IMAGE + image,
+      );
+    });
+
+    res.status(200).json({
+      games,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+// Get top recommend games
+exports.getRecommendGames = async (req, res, next) => {
+  try {
+    const games = await Game.find({
+      recommend: {
+        $ne: null,
+      },
+    })
+      .sort({ recommend: 1 })
+      .limit(5)
+      .populate("category", "name");
+
+    games.forEach((game) => {
+      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+      game.images = game.images.map(
+        (image) => process.env.DOMAIN_IMAGE + image,
+      );
+    });
+
+    res.status(200).json({
+      games,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+// Get most downloaded games
+exports.getMostDownloadedGames = async (req, res, next) => {
+  try {
+    const games = await Game.find()
+      .sort({ downloaded_number: -1 })
+      .limit(5)
+      .populate("category", "name");
+
+    games.forEach((game) => {
+      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+      game.images = game.images.map(
+        (image) => process.env.DOMAIN_IMAGE + image,
+      );
+    });
+
+    res.status(200).json({
+      games,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+// Get top 5 sale games
+exports.getSaleGames = async (req, res, next) => {
+  try {
+    const games = await Game.find()
+      .sort({ discount: -1 })
+      .limit(5)
+      .populate("category", "name");
+
+    games.forEach((game) => {
+      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+      game.images = game.images.map(
+        (image) => process.env.DOMAIN_IMAGE + image,
+      );
+    });
 
     res.status(200).json({
       games,
@@ -30,6 +121,10 @@ exports.getGame = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
+
+    game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+    game.images = game.images.map((image) => process.env.DOMAIN_IMAGE + image);
+
     res.status(200).json({
       game,
     });
@@ -112,15 +207,15 @@ exports.editGame = async (req, res, next) => {
       recommend,
     } = req.body;
 
-    game.name = name || game.name;
-    game.category = category || game.category;
-    game.developer = developer || game.developer;
-    game.publisher = publisher || game.publisher;
-    game.price = price || game.price;
-    game.release_date = release_date || game.release_date;
-    game.description = description || game.description;
-    game.discount = discount || game.discount;
-    game.recommend = recommend || game.recommend;
+    game.name = name;
+    game.category = category;
+    game.developer = developer;
+    game.publisher = publisher;
+    game.price = price;
+    game.release_date = release_date;
+    game.description = description;
+    game.discount = discount;
+    game.recommend = recommend !== "null" ? recommend : game.recommend;
 
     if (res.locals.feature_image) {
       game.feature_image = res.locals.feature_image;

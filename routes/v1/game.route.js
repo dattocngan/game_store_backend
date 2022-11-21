@@ -18,6 +18,15 @@ const upload = multer({
 // Get all games
 router.get("/", gameController.getGames);
 
+// Get top 5 recommend games
+router.get("/recommend", gameController.getRecommendGames);
+
+// Get top 5 most downloaded games
+router.get("/most-downloaded", gameController.getMostDownloadedGames);
+
+// Get top 5 sale games
+router.get("/sale", gameController.getSaleGames);
+
 //Get all games bought
 router.get("/bought", isAuth, gameController.getGamesBought);
 

@@ -170,6 +170,21 @@ exports.editProfile = async (req, res, next) => {
   }
 };
 
+exports.getCode = async (req, res, next) => {
+  try {
+    const codes = await Code.find();
+
+    res.status(200).json({
+      codes,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
 //Generate code
 exports.generateCode = async (req, res, next) => {
   try {

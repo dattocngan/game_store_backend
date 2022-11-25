@@ -28,6 +28,9 @@ router.get("/users", isAdmin, authController.getAllUsers);
 router.post("/activate-code", isAuth, authController.activateCode);
 
 //Generate code
+router.get("/code", isAdmin, authController.getCode);
+
+//Generate code
 router.post("/code", isAdmin, authController.generateCode);
 
 module.exports = router;

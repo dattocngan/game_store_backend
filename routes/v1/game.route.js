@@ -56,11 +56,18 @@ router.post(
     },
   ]),
   async (req, res, next) => {
-    const featureResult = await s3Upload(req.files.feature_image);
-    res.locals.feature_image = featureResult[0].key;
-    const imagesResult = await s3Upload(req.files.images);
-    res.locals.images = imagesResult;
-    next();
+    try {
+      console.log(req.files);
+      const featureResult = await s3Upload(req.files.feature_image);
+      res.locals.feature_image = featureResult[0].key;
+      if (req.files.images && !req.files.images.length) {
+        const imagesResult = await s3Upload(req.files.images);
+        res.locals.images = imagesResult;
+      }
+      next();
+    } catch (err) {
+      next(err);
+    }
   },
   gameController.createGame,
 );
@@ -79,19 +86,23 @@ router.put(
     },
   ]),
   async (req, res, next) => {
-    if (Object.keys(req.files).length > 0) {
-      if (req.files.feature_image) {
-        const featureResult = await s3Upload(req.files.feature_image);
-        res.locals.feature_image = featureResult[0].key;
+    try {
+      if (Object.keys(req.files).length > 0) {
+        if (req.files.feature_image) {
+          const featureResult = await s3Upload(req.files.feature_image);
+          res.locals.feature_image = featureResult[0].key;
+        }
+
+        if (req.files.images && req.files.images.length > 0) {
+          const imagesResult = await s3Upload(req.files.images);
+          res.locals.images = imagesResult;
+        }
       }
 
-      if (req.files.images && req.files.images.length > 0) {
-        const imagesResult = await s3Upload(req.files.images);
-        res.locals.images = imagesResult;
-      }
+      next();
+    } catch (err) {
+      next(err);
     }
-
-    next();
   },
   gameController.editGame,
 );

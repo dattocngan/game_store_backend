@@ -32,9 +32,13 @@ router.post(
     },
   ]),
   async (req, res, next) => {
-    const imageResult = await s3Upload(req.files.image);
-    res.locals.image = imageResult[0].key;
-    next();
+    try {
+      const imageResult = await s3Upload(req.files.image);
+      res.locals.image = imageResult[0].key;
+      next();
+    } catch (err) {
+      next(err);
+    }
   },
   categoryController.createCategory,
 );
@@ -50,13 +54,17 @@ router.put(
     },
   ]),
   async (req, res, next) => {
-    if (Object.keys(req.files).length > 0) {
-      if (req.files.image) {
-        const imageResult = await s3Upload(req.files.image);
-        res.locals.image = imageResult[0].key;
+    try {
+      if (Object.keys(req.files).length > 0) {
+        if (req.files.image) {
+          const imageResult = await s3Upload(req.files.image);
+          res.locals.image = imageResult[0].key;
+        }
       }
+      next();
+    } catch (err) {
+      next(err);
     }
-    next();
   },
   categoryController.editCategory,
 );

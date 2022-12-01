@@ -188,29 +188,26 @@ exports.getCode = async (req, res, next) => {
 //Generate code
 exports.generateCode = async (req, res, next) => {
   try {
-    const codes = [];
     let expiredTime = new Date();
-    expiredTime.setDate(expiredTime.getDate() + 1);
+    expiredTime.setDate(expiredTime.getDate() + 7);
 
-    for (let i = 0; i < 20; i++) {
-      const code = codeGenerator.generate(6, {
-        digits: true,
-        lowerCaseAlphabets: false,
-        upperCaseAlphabets: false,
-        specialChars: false,
-      });
+    const codeGenerate = codeGenerator.generate(6, {
+      digits: true,
+      lowerCaseAlphabets: false,
+      upperCaseAlphabets: false,
+      specialChars: false,
+    });
 
-      codes.push({
-        code: code,
-        expired_time: expiredTime,
-        value: Math.floor(Math.random() * 100 + 10),
-      });
-    }
+    const code = {
+      code: codeGenerate,
+      expired_time: expiredTime,
+      value: Math.floor(Math.random() * 100 + 10),
+    };
 
-    await Code.insertMany(codes);
+    await Code.create(code);
 
     res.status(201).json({
-      message: "Generated codes successfully!",
+      message: "Generate code successfully!",
     });
   } catch (err) {
     if (!err.statusCode) {

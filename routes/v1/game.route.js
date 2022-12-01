@@ -57,10 +57,9 @@ router.post(
   ]),
   async (req, res, next) => {
     try {
-      console.log(req.files);
       const featureResult = await s3Upload(req.files.feature_image);
       res.locals.feature_image = featureResult[0].key;
-      if (req.files.images && !req.files.images.length) {
+      if (req.files.images && req.files.images.length) {
         const imagesResult = await s3Upload(req.files.images);
         res.locals.images = imagesResult;
       }
@@ -93,7 +92,7 @@ router.put(
           res.locals.feature_image = featureResult[0].key;
         }
 
-        if (req.files.images && req.files.images.length > 0) {
+        if (req.files.images && req.files.images.length) {
           const imagesResult = await s3Upload(req.files.images);
           res.locals.images = imagesResult;
         }

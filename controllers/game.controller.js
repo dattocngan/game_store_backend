@@ -153,7 +153,7 @@ exports.createGame = async (req, res, next) => {
     const feature_image = res.locals.feature_image;
 
     const images = [];
-    res.locals.images.forEach((image) => {
+    res.locals.images?.forEach((image) => {
       images.push(image.key);
     });
 

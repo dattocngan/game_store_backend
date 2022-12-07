@@ -322,7 +322,7 @@ exports.getGamesInCart = async (req, res, next) => {
     const user = req.user;
     const games = await Game.find({
       _id: { $in: user.cart },
-    });
+    }).populate("category", "name");
 
     res.status(200).json({
       games,
@@ -367,7 +367,10 @@ exports.addOrRemoveGameOfWishList = async (req, res, next) => {
 exports.getGamesInWishList = async (req, res, next) => {
   try {
     const user = req.user;
-    const games = await Game.find({ _id: { $in: user.wishlist } });
+    const games = await Game.find({ _id: { $in: user.wishlist } }).populate(
+      "category",
+      "name",
+    );
 
     res.status(200).json({
       games,
@@ -473,7 +476,10 @@ exports.getGamesBought = async (req, res, next) => {
     const games = user.games_bought;
 
     for (let i = 0; i < games.length; i++) {
-      const game = await Game.findById(games[i].game);
+      const game = await Game.findById(games[i].game).populate(
+        "category",
+        "name",
+      );
       games[i].game = game;
     }
     res.status(200).json({

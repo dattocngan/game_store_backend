@@ -324,6 +324,10 @@ exports.getGamesInCart = async (req, res, next) => {
       _id: { $in: user.cart },
     }).populate("category", "name");
 
+    games.forEach((game) => {
+      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+    });
+
     res.status(200).json({
       games,
     });
@@ -371,6 +375,10 @@ exports.getGamesInWishList = async (req, res, next) => {
       "category",
       "name",
     );
+
+    games.forEach((game) => {
+      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+    });
 
     res.status(200).json({
       games,
@@ -480,6 +488,7 @@ exports.getGamesBought = async (req, res, next) => {
         "category",
         "name",
       );
+      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
       games[i].game = game;
     }
     res.status(200).json({

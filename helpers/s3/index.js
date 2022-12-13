@@ -7,9 +7,13 @@ exports.s3Upload = async (files) => {
   const s3 = new S3();
 
   const params = files.map((file) => {
+    let key = `images/${uuid() + path.extname(file.originalname)}`;
+    if (file.fieldname === "download_link") {
+      key = `applications/${uuid() + path.extname(file.originalname)}`;
+    }
     return {
       Bucket: process.env.AWS_BUCKET_NAME,
-      Key: `images/${uuid() + path.extname(file.originalname)}`,
+      Key: key,
       Body: file.buffer,
     };
   });

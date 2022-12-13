@@ -12,7 +12,7 @@ const { configFilterFileUpload } = require("../../helpers/upload");
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  fileFilter: configFilterFileUpload(),
+  // fileFilter: configFilterFileUpload(),
 });
 
 // Get all games
@@ -54,11 +54,17 @@ router.post(
     {
       name: "images",
     },
+    {
+      name: "download_link",
+      maxCount: 1,
+    },
   ]),
   async (req, res, next) => {
     try {
       const featureResult = await s3Upload(req.files.feature_image);
       res.locals.feature_image = featureResult[0].key;
+      const downloadLink = await s3Upload(req.files.download_link);
+      res.locals.download_link = downloadLink[0].Key;
       if (req.files.images && req.files.images.length) {
         const imagesResult = await s3Upload(req.files.images);
         res.locals.images = imagesResult;
@@ -83,6 +89,10 @@ router.put(
     {
       name: "images",
     },
+    {
+      name: "download_link",
+      maxCount: 1,
+    },
   ]),
   async (req, res, next) => {
     try {
@@ -90,6 +100,11 @@ router.put(
         if (req.files.feature_image) {
           const featureResult = await s3Upload(req.files.feature_image);
           res.locals.feature_image = featureResult[0].key;
+        }
+
+        if (req.files.download_link) {
+          const downloadLink = await s3Upload(req.files.download_link);
+          res.locals.download_link = downloadLink[0].key;
         }
 
         if (req.files.images && req.files.images.length) {
@@ -114,5 +129,12 @@ router.post("/:id/cart", isAuth, gameController.addOrRemoveGameOfCart);
 
 //Add or remove game to wishlist
 router.post("/:id/wishlist", isAuth, gameController.addOrRemoveGameOfWishList);
+
+//Install or uninstall game
+router.put(
+  "/:id/change-install-status-game",
+  isAuth,
+  gameController.changeInstallStatusGame,
+);
 
 module.exports = router;

@@ -2,18 +2,50 @@ require("dotenv/config");
 
 const User = require("../models/user");
 const Game = require("../models/game");
+const jwt = require("jsonwebtoken");
 
 // //Get all games
 exports.getGames = async (req, res, next) => {
   try {
+    let user = null;
+    const authHeader = req.get("Authorization");
+    if (authHeader) {
+      const token = req.get("Authorization").split(" ")[1];
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      if (decodedToken) {
+        user = await User.findOne({ _id: decodedToken.userId });
+      }
+    }
+
     const games = await Game.find().populate("category", "name");
 
-    games.forEach((game) => {
-      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
-      game.images = game.images.map(
+    for (let i = 0; i < games.length; i++) {
+      games[i] = games[i].toObject();
+      games[i].feature_image =
+        process.env.DOMAIN_IMAGE + games[i].feature_image;
+      games[i].download_link =
+        process.env.DOMAIN_IMAGE +
+        (games[i].download_link
+          ? games[i].download_link
+          : "applications/2b228be0-a0e9-419d-8f82-96fea78649ce.apk");
+      games[i].images = games[i].images.map(
         (image) => process.env.DOMAIN_IMAGE + image,
       );
-    });
+      let check = false;
+      if (user) {
+        for (let j = 0; j < user.games_bought.length; j++) {
+          const gameBought = user.games_bought[j];
+          if (gameBought.game.toString() === games[i]._id.toString()) {
+            check = true;
+            break;
+          }
+        }
+      }
+      if (!check) {
+        delete games[i].is_installed;
+        delete games[i].download_link;
+      }
+    }
 
     res.status(200).json({
       games,
@@ -112,7 +144,18 @@ exports.getSaleGames = async (req, res, next) => {
 exports.getGame = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const game = await Game.findOne({
+
+    let user = null;
+    const authHeader = req.get("Authorization");
+    if (authHeader) {
+      const token = req.get("Authorization").split(" ")[1];
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      if (decodedToken) {
+        user = await User.findOne({ _id: decodedToken.userId });
+      }
+    }
+
+    let game = await Game.findOne({
       _id: id,
     }).populate("category", "name");
 
@@ -121,10 +164,28 @@ exports.getGame = async (req, res, next) => {
       error.statusCode = 404;
       throw error;
     }
-
+    game = game.toObject();
     game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+    game.download_link =
+      process.env.DOMAIN_IMAGE +
+      (game.download_link
+        ? game.download_link
+        : "applications/2b228be0-a0e9-419d-8f82-96fea78649ce.apk");
     game.images = game.images.map((image) => process.env.DOMAIN_IMAGE + image);
-
+    let check = false;
+    if (user) {
+      for (let j = 0; j < user.games_bought.length; j++) {
+        const gameBought = user.games_bought[j];
+        if (gameBought.game.toString() === game._id.toString()) {
+          check = true;
+          break;
+        }
+      }
+    }
+    if (!check) {
+      delete game.is_installed;
+      delete game.download_link;
+    }
     res.status(200).json({
       game,
     });
@@ -151,6 +212,8 @@ exports.createGame = async (req, res, next) => {
     } = req.body;
 
     const feature_image = res.locals.feature_image;
+    const download_link = res.locals.download_link;
+    console.log(download_link);
 
     const images = [];
     res.locals.images?.forEach((image) => {
@@ -168,6 +231,7 @@ exports.createGame = async (req, res, next) => {
       discount,
       feature_image,
       images,
+      download_link,
     });
 
     res.status(201).json({
@@ -219,6 +283,10 @@ exports.editGame = async (req, res, next) => {
 
     if (res.locals.feature_image) {
       game.feature_image = res.locals.feature_image;
+    }
+
+    if (res.locals.download_link) {
+      game.download_link = res.locals.download_link;
     }
 
     if (res.locals.images && res.locals.images.length > 0) {
@@ -489,10 +557,49 @@ exports.getGamesBought = async (req, res, next) => {
         "name",
       );
       game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
+      game.download_link =
+        process.env.DOMAIN_IMAGE +
+        (games[i].download_link
+          ? games[i].download_link
+          : "applications/2b228be0-a0e9-419d-8f82-96fea78649ce.apk");
       games[i].game = game;
     }
     res.status(200).json({
       games,
+    });
+  } catch (err) {
+    if (!err.statusCode) {
+      err.statusCode = 500;
+    }
+    next(err);
+  }
+};
+
+//Install or uninstall game
+exports.changeInstallStatusGame = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const gameId = req.params.id;
+
+    const games = user.games_bought;
+    let check = false;
+    for (let i = 0; i < games.length; i++) {
+      if (games[i].game.toString() === gameId.toString()) {
+        check = true;
+        break;
+      }
+    }
+    if (!check) {
+      const error = new Error(`Game hasn't been purchased yet!`);
+      error.statusCode = 403;
+      throw error;
+    }
+    const game = await Game.findById(gameId);
+    game.is_installed = !game.is_installed;
+    game.save();
+
+    res.status(201).json({
+      message: "Successfully!",
     });
   } catch (err) {
     if (!err.statusCode) {

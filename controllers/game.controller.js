@@ -61,6 +61,16 @@ exports.getGames = async (req, res, next) => {
 // Get top recommend games
 exports.getRecommendGames = async (req, res, next) => {
   try {
+    let user = null;
+    const authHeader = req.get("Authorization");
+    if (authHeader) {
+      const token = req.get("Authorization").split(" ")[1];
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      if (decodedToken) {
+        user = await User.findOne({ _id: decodedToken.userId });
+      }
+    }
+
     const games = await Game.find({
       recommend: {
         $ne: null,
@@ -70,12 +80,33 @@ exports.getRecommendGames = async (req, res, next) => {
       .limit(5)
       .populate("category", "name");
 
-    games.forEach((game) => {
-      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
-      game.images = game.images.map(
+    for (let i = 0; i < games.length; i++) {
+      games[i] = games[i].toObject();
+      games[i].feature_image =
+        process.env.DOMAIN_IMAGE + games[i].feature_image;
+      games[i].download_link =
+        process.env.DOMAIN_IMAGE +
+        (games[i].download_link
+          ? games[i].download_link
+          : "applications/2b228be0-a0e9-419d-8f82-96fea78649ce.apk");
+      games[i].images = games[i].images.map(
         (image) => process.env.DOMAIN_IMAGE + image,
       );
-    });
+      let check = false;
+      if (user) {
+        for (let j = 0; j < user.games_bought.length; j++) {
+          const gameBought = user.games_bought[j];
+          if (gameBought.game.toString() === games[i]._id.toString()) {
+            check = true;
+            break;
+          }
+        }
+      }
+      if (!check) {
+        delete games[i].is_installed;
+        delete games[i].download_link;
+      }
+    }
 
     res.status(200).json({
       games,
@@ -91,17 +122,48 @@ exports.getRecommendGames = async (req, res, next) => {
 // Get most downloaded games
 exports.getMostDownloadedGames = async (req, res, next) => {
   try {
+    let user = null;
+    const authHeader = req.get("Authorization");
+    if (authHeader) {
+      const token = req.get("Authorization").split(" ")[1];
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      if (decodedToken) {
+        user = await User.findOne({ _id: decodedToken.userId });
+      }
+    }
+
     const games = await Game.find()
       .sort({ downloaded_number: -1 })
       .limit(5)
       .populate("category", "name");
 
-    games.forEach((game) => {
-      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
-      game.images = game.images.map(
+    for (let i = 0; i < games.length; i++) {
+      games[i] = games[i].toObject();
+      games[i].feature_image =
+        process.env.DOMAIN_IMAGE + games[i].feature_image;
+      games[i].download_link =
+        process.env.DOMAIN_IMAGE +
+        (games[i].download_link
+          ? games[i].download_link
+          : "applications/2b228be0-a0e9-419d-8f82-96fea78649ce.apk");
+      games[i].images = games[i].images.map(
         (image) => process.env.DOMAIN_IMAGE + image,
       );
-    });
+      let check = false;
+      if (user) {
+        for (let j = 0; j < user.games_bought.length; j++) {
+          const gameBought = user.games_bought[j];
+          if (gameBought.game.toString() === games[i]._id.toString()) {
+            check = true;
+            break;
+          }
+        }
+      }
+      if (!check) {
+        delete games[i].is_installed;
+        delete games[i].download_link;
+      }
+    }
 
     res.status(200).json({
       games,
@@ -117,17 +179,48 @@ exports.getMostDownloadedGames = async (req, res, next) => {
 // Get top 5 sale games
 exports.getSaleGames = async (req, res, next) => {
   try {
+    let user = null;
+    const authHeader = req.get("Authorization");
+    if (authHeader) {
+      const token = req.get("Authorization").split(" ")[1];
+      const decodedToken = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      if (decodedToken) {
+        user = await User.findOne({ _id: decodedToken.userId });
+      }
+    }
+
     const games = await Game.find()
       .sort({ discount: -1 })
       .limit(5)
       .populate("category", "name");
 
-    games.forEach((game) => {
-      game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
-      game.images = game.images.map(
+    for (let i = 0; i < games.length; i++) {
+      games[i] = games[i].toObject();
+      games[i].feature_image =
+        process.env.DOMAIN_IMAGE + games[i].feature_image;
+      games[i].download_link =
+        process.env.DOMAIN_IMAGE +
+        (games[i].download_link
+          ? games[i].download_link
+          : "applications/2b228be0-a0e9-419d-8f82-96fea78649ce.apk");
+      games[i].images = games[i].images.map(
         (image) => process.env.DOMAIN_IMAGE + image,
       );
-    });
+      let check = false;
+      if (user) {
+        for (let j = 0; j < user.games_bought.length; j++) {
+          const gameBought = user.games_bought[j];
+          if (gameBought.game.toString() === games[i]._id.toString()) {
+            check = true;
+            break;
+          }
+        }
+      }
+      if (!check) {
+        delete games[i].is_installed;
+        delete games[i].download_link;
+      }
+    }
 
     res.status(200).json({
       games,
@@ -390,7 +483,9 @@ exports.getGamesInCart = async (req, res, next) => {
     const user = req.user;
     const games = await Game.find({
       _id: { $in: user.cart },
-    }).populate("category", "name");
+    })
+      .select("-is_installed -link")
+      .populate("category", "name");
 
     games.forEach((game) => {
       game.feature_image = process.env.DOMAIN_IMAGE + game.feature_image;
